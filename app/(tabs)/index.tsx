@@ -1,592 +1,389 @@
-// // import React, { useState, useEffect, useRef } from 'react';
-// // import { StyleSheet, View, Text, TextInput, TouchableOpacity, Keyboard, FlatList, ActivityIndicator, SafeAreaView } from 'react-native';
-// // import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
-// // import * as Location from 'expo-location';
-// // import { X } from 'lucide-react-native';
-
-// // // ⚠️ REPLACE THIS WITH YOUR COMPUTER'S LOCAL IP ADDRESS
-// // // Example: http://192.168.1.15:5001/api
-// // const API_BASE_URL = 'https://e819e1a93149.ngrok-free.app/api'; 
-
-// // export default function App() {
-// //   const mapRef =useRef<MapView>(null);
-// //   const [stations, setStations] = useState<any[]>([]);
-// //   const [origin, setOrigin] = useState('');
-// //   const [destination, setDestination] = useState('');
-// //   const [routeData, setRouteData] = useState<any>(null);
-// //   const [loading, setLoading] = useState(false);
-// //   const [userLocation, setUserLocation] = useState<any>(null);
-
-// //   // Initial Region (Boston)
-// //   const [region, setRegion] = useState({
-// //     latitude: 42.3601,
-// //     longitude: -71.0589,
-// //     latitudeDelta: 0.05,
-// //     longitudeDelta: 0.05,
-// //   });
-
-// //   // 1. Fetch Stations & Permission on Load
-// //   useEffect(() => {
-// //     (async () => {
-// //       // Get Location Permission
-// //       let { status } = await Location.requestForegroundPermissionsAsync();
-// //       if (status === 'granted') {
-// //         let location = await Location.getCurrentPositionAsync({});
-// //         setUserLocation(location.coords);
-// //       }
-
-// //       // Fetch Stations from Python Backend
-// //       try {
-// //         const res = await fetch(`${API_BASE_URL}/mbta/stations`);
-// //         const data = await res.json();
-// //         if (data.success) setStations(data.data);
-// //       } catch (err) {
-// //         console.error("Backend Error. Check IP Address!", err);
-// //       }
-// //     })();
-// //   }, []);
-
-// //   // 2. Handle Route Search
-// //   const handleSearch = async () => {
-// //     Keyboard.dismiss();
-// //     if (!origin || !destination) return;
-
-// //     setLoading(true);
-// //     try {
-// //       const res = await fetch(`${API_BASE_URL}/directions`, {
-// //         method: 'POST',
-// //         headers: { 'Content-Type': 'application/json' },
-// //         body: JSON.stringify({ origin, destination })
-// //       });
-// //       const data = await res.json();
-      
-// //       if (data.success && data.data) {
-// //         setRouteData(data.data);
-        
-// //         // Zoom map to the route
-// //         const coords = data.data.path; // [{lat, lng}]
-// //         // Convert to RNMaps format
-// //         const mapCoords = coords.map((c: any) => ({ latitude: c.lat, longitude: c.lng }));
-        
-// //         if (mapRef.current) {
-// //           mapRef.current.fitToCoordinates(mapCoords, {
-// //             edgePadding: { top: 50, right: 20, bottom: 300, left: 20 },
-// //             animated: true,
-// //           });
-// //         }
-// //       }
-// //     } catch (err) {
-// //       if (err instanceof Error) {
-// //         alert("Technical Error: " + err.message);
-// //       } else {
-// //         alert("Technical Error: " + String(err));
-// //       }
-// //     }
-// //     setLoading(false);
-// //   };
-
-// //   return (
-// //     <View style={styles.container}>
-      
-// //       {/* MAP BACKGROUND */}
-// //       <MapView
-// //         ref={mapRef}
-// //         style={styles.map}
-// //         provider={PROVIDER_GOOGLE}
-// //         initialRegion={region}
-// //         showsUserLocation={true}
-// //       >
-// //         {/* Draw Stations */}
-// //         {stations.map(station => (
-// //           <Marker
-// //             key={station.id}
-// //             coordinate={{ latitude: station.lat, longitude: station.lng }}
-// //             title={station.name}
-// //             pinColor={station.routes[0] === 'Red' ? 'red' : station.routes[0] === 'Orange' ? 'orange' : 'green'}
-// //           />
-// //         ))}
-
-// //         {/* Draw Route Line */}
-// //         {routeData && (
-// //           <Polyline
-// //             coordinates={routeData.path.map((p: any) => ({ latitude: p.lat, longitude: p.lng }))}
-// //             strokeColor="#2563EB"
-// //             strokeWidth={4}
-// //           />
-// //         )}
-// //       </MapView>
-
-// //       {/* FLOATING SEARCH PANEL */}
-// //       <SafeAreaView style={styles.searchContainer}>
-// //         <View style={styles.card}>
-// //           <Text style={styles.title}>Trip Planner</Text>
-          
-// //           <View style={styles.inputRow}>
-// //             <View style={[styles.dot, { backgroundColor: '#3B82F6' }]} />
-// //             <TextInput
-// //               style={styles.input}
-// //               placeholder="Start Location"
-// //               value={origin}
-// //               onChangeText={setOrigin}
-// //               placeholderTextColor="#999"
-// //             />
-// //           </View>
-
-// //           <View style={styles.inputRow}>
-// //             <View style={[styles.dot, { backgroundColor: '#EF4444' }]} />
-// //             <TextInput
-// //               style={styles.input}
-// //               placeholder="Destination"
-// //               value={destination}
-// //               onChangeText={setDestination}
-// //               placeholderTextColor="#999"
-// //             />
-// //           </View>
-
-// //           <TouchableOpacity style={styles.button} onPress={handleSearch} disabled={loading}>
-// //             {loading ? (
-// //               <ActivityIndicator color="#fff" />
-// //             ) : (
-// //               <Text style={styles.buttonText}>Get Directions</Text>
-// //             )}
-// //           </TouchableOpacity>
-// //         </View>
-// //       </SafeAreaView>
-
-// //       {/* BOTTOM SHEET RESULTS */}
-// //       {routeData && (
-// //         <View style={styles.resultsSheet}>
-// //           <View style={styles.resultHeader}>
-// //             <View>
-// //               <Text style={styles.timeText}>{routeData.duration}</Text>
-// //               <Text style={styles.distText}>{routeData.distance}</Text>
-// //             </View>
-// //             <TouchableOpacity onPress={() => setRouteData(null)}>
-// //               <View style={styles.closeBtn}>
-// //                  <X size={20} color="#000" />
-// //               </View>
-// //             </TouchableOpacity>
-// //           </View>
-
-// //           <FlatList
-// //             data={routeData.steps}
-// //             keyExtractor={(_, i) => i.toString()}
-// //             style={{ marginTop: 10 }}
-// //             renderItem={({ item, index }) => (
-// //               <View style={styles.stepItem}>
-// //                 <Text style={styles.stepIndex}>{index + 1}.</Text>
-// //                 {/* HTML Stripping for clean text */}
-// //                 <Text style={styles.stepText}>
-// //                   {item.instruction.replace(/<[^>]*>?/gm, '')}
-// //                 </Text>
-// //               </View>
-// //             )}
-// //           />
-// //         </View>
-// //       )}
-// //     </View>
-// //   );
-// // }
-
-// // const styles = StyleSheet.create({
-// //   container: { flex: 1 },
-// //   map: { width: '100%', height: '100%' },
-  
-// //   searchContainer: {
-// //     position: 'absolute',
-// //     top: 60, // Adjusted for SafeArea
-// //     width: '100%',
-// //     paddingHorizontal: 20,
-// //     zIndex: 10,
-// //   },
-// //   card: {
-// //     backgroundColor: 'white',
-// //     borderRadius: 16,
-// //     padding: 16,
-// //     shadowColor: '#000',
-// //     shadowOpacity: 0.1,
-// //     shadowRadius: 10,
-// //     elevation: 5,
-// //   },
-// //   title: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
-// //   inputRow: {
-// //     flexDirection: 'row',
-// //     alignItems: 'center',
-// //     marginBottom: 10,
-// //     backgroundColor: '#F3F4F6',
-// //     borderRadius: 8,
-// //     paddingHorizontal: 10,
-// //   },
-// //   dot: { width: 8, height: 8, borderRadius: 4, marginRight: 10 },
-// //   input: {
-// //     flex: 1,
-// //     height: 44,
-// //     fontSize: 16,
-// //     color: '#000'
-// //   },
-// //   button: {
-// //     backgroundColor: '#2563EB',
-// //     borderRadius: 10,
-// //     height: 48,
-// //     justifyContent: 'center',
-// //     alignItems: 'center',
-// //     marginTop: 5,
-// //   },
-// //   buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-
-// //   resultsSheet: {
-// //     position: 'absolute',
-// //     bottom: 0,
-// //     width: '100%',
-// //     height: '40%',
-// //     backgroundColor: 'white',
-// //     borderTopLeftRadius: 20,
-// //     borderTopRightRadius: 20,
-// //     padding: 20,
-// //     shadowColor: '#000',
-// //     shadowOpacity: 0.1,
-// //     shadowRadius: 10,
-// //     elevation: 10,
-// //   },
-// //   resultHeader: {
-// //     flexDirection: 'row',
-// //     justifyContent: 'space-between',
-// //     alignItems: 'flex-start',
-// //     marginBottom: 10,
-// //     borderBottomWidth: 1,
-// //     borderBottomColor: '#eee',
-// //     paddingBottom: 10,
-// //   },
-// //   timeText: { fontSize: 24, fontWeight: 'bold', color: '#2563EB' },
-// //   distText: { fontSize: 14, color: '#666' },
-// //   closeBtn: { padding: 5, backgroundColor: '#eee', borderRadius: 15 },
-// //   stepItem: { flexDirection: 'row', marginBottom: 12, paddingRight: 10 },
-// //   stepIndex: { fontWeight: 'bold', color: '#2563EB', marginRight: 8, width: 25 },
-// //   stepText: { flex: 1, color: '#333', lineHeight: 20 },
-// // });
 // import React, { useState, useEffect, useRef } from 'react';
-// import { StyleSheet, View, Text, TextInput, TouchableOpacity, Keyboard, FlatList, ActivityIndicator, SafeAreaView, ScrollView, Dimensions } from 'react-native';
-// import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+// import { StyleSheet, View, Text, TextInput, TouchableOpacity, Keyboard, FlatList, ActivityIndicator, SafeAreaView, StatusBar } from 'react-native';
+// import MapView, { Marker, Polyline } from 'react-native-maps';
 // import * as Location from 'expo-location';
-// import { X, Train, Clock, MapPin } from 'lucide-react-native';
-
-
-
-// const API_BASE_URL = 'https://e819e1a93149.ngrok-free.app/api';
-
-// const { width } = Dimensions.get('window');
+// import { ArrowLeft, TrainFront, Footprints, Clock, Circle, MapPin, Navigation } from 'lucide-react-native';
+// import { Audio } from 'expo-av';
+// const API_BASE_URL = 'https://e819e1a93149.ngrok-free.app/api'; 
 
 // export default function App() {
 //   const mapRef = useRef<MapView>(null);
   
-//   // --- STATE ---
+//   // --- APP STATE ---
+//   const [screen, setScreen] = useState<'search' | 'live'>('search'); 
+  
+//   // --- DATA ---
 //   const [stations, setStations] = useState<any[]>([]);
-//   const [vehicles, setVehicles] = useState<any[]>([]); // 🚇 Live Trains
+//   const [vehicles, setVehicles] = useState<any[]>([]);
 //   const [origin, setOrigin] = useState('');
 //   const [destination, setDestination] = useState('');
+//   const [walkingSpeed, setWalkingSpeed] = useState('normal'); 
   
-//   // Route Data (Now handles Multiple Routes)
 //   const [allRoutes, setAllRoutes] = useState<any[]>([]);
-//   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
+//   const [activeRoute, setActiveRoute] = useState<any>(null); 
   
-//   // Station Predictions (Arrivals Board)
-//   const [selectedStation, setSelectedStation] = useState<any>(null);
-//   const [predictions, setPredictions] = useState<any[]>([]);
+//   const [liveConfidence, setLiveConfidence] = useState<string>('high'); 
+//   const [transferUpdate, setTransferUpdate] = useState<string>('');
   
 //   const [loading, setLoading] = useState(false);
 //   const [userLocation, setUserLocation] = useState<any>(null);
-
-//   // Initial Region (Boston)
 //   const [region, setRegion] = useState({
-//     latitude: 42.3601,
-//     longitude: -71.0589,
-//     latitudeDelta: 0.05,
-//     longitudeDelta: 0.05,
+//     latitude: 42.3601, longitude: -71.0589, latitudeDelta: 0.05, longitudeDelta: 0.05,
 //   });
 
-//   // --- 1. INITIAL FETCH & LIVE VEHICLE POLLING ---
+//   // --- 1. INITIAL SETUP ---
 //   useEffect(() => {
 //     (async () => {
-//       // Permission & Location
-//       let { status } = await Location.requestForegroundPermissionsAsync();
-//       if (status === 'granted') {
-//         let location = await Location.getCurrentPositionAsync({});
-//         setUserLocation(location.coords);
-//       }
-
-//       // Fetch Static Stations
 //       try {
 //         const res = await fetch(`${API_BASE_URL}/mbta/stations`);
 //         const data = await res.json();
 //         if (data.success) setStations(data.data);
-//       } catch (err) {
-//         console.error("Station Fetch Error:", err);
-//       }
-//     })();
+//       } catch (err) {}
 
-//     // 🔄 POLL LIVE TRAINS (Every 5 Seconds)
-//     const fetchVehicles = async () => {
 //       try {
-//         const res = await fetch(`${API_BASE_URL}/mbta/vehicles`);
-//         const data = await res.json();
-//         if (data.success) setVehicles(data.data);
-//       } catch (err) {
-//         console.log("Vehicle Sync Error (Check Server):", err);
-//       }
-//     };
-
-//     fetchVehicles(); // Run once immediately
-//     const interval = setInterval(fetchVehicles, 5000); // Loop
-//     return () => clearInterval(interval); // Cleanup
+//         let { status } = await Location.requestForegroundPermissionsAsync();
+//         if (status === 'granted') {
+//              let loc = await Location.getCurrentPositionAsync({});
+//              setUserLocation(loc.coords);
+//         }
+//       } catch (e) { setUserLocation({ latitude: 42.355, longitude: -71.065 }); }
+//     })();
 //   }, []);
 
-//   // --- 2. HANDLE SEARCH (MULTIPLE ROUTES) ---
+// // --- 2. LIVE TRACKING LOGIC ---
+//   useEffect(() => {
+//     if (screen !== 'live' || !activeRoute) return;
+
+//     // A. Vehicle Polling (Existing)
+//     const summary = activeRoute.summary || "";
+//     const linesToTrack: string[] = [];
+//     if (summary.includes('Red')) linesToTrack.push('Red');
+//     if (summary.includes('Orange')) linesToTrack.push('Orange');
+//     if (summary.includes('Blue')) linesToTrack.push('Blue');
+//     if (summary.includes('Green')) linesToTrack.push('Green-B,Green-C,Green-D,Green-E');
+
+//     const fetchVehicles = async () => {
+//         if(linesToTrack.length === 0) return;
+//         try {
+//             const res = await fetch(`${API_BASE_URL}/mbta/vehicles?routes=${linesToTrack.join(',')}`);
+//             const data = await res.json();
+//             if (data.success) setVehicles(data.data);
+//         } catch (err) {}
+//     };
+
+//     // B. TARGETED TRANSFER CHECK (The Fix)
+//     const checkTransferSafety = async () => {
+//         let newConfidence = activeRoute.catch_confidence; 
+//         let newUpdate = "On Schedule";
+
+//         // Loop through all transit steps
+//         for (let i = 0; i < activeRoute.steps.length; i++) {
+//             const step = activeRoute.steps[i];
+            
+//             if (step.is_transit && step.stop_id) {
+//                 try {
+//                     // 1. Get ALL upcoming trains for this station
+//                     const res = await fetch(`${API_BASE_URL}/mbta/predictions/${step.stop_id}`);
+//                     const data = await res.json();
+                    
+//                     if (data.success && data.data.length > 0) {
+//                         const predictions = data.data;
+                        
+//                         // 2. THE FIX: Find the specific train we are scheduled to take
+//                         // We look for a train departing around our Scheduled Time (+/- 10 mins buffer)
+//                         // step.departure_time is Unix Timestamp (Seconds)
+//                         const scheduledTime = step.departure_time * 1000; // Convert to ms
+                        
+//                         // Find the prediction closest to our scheduled time
+//                         // (MBTA API doesn't give timestamps in this simple endpoint, so we infer from 'minutes')
+//                         const now = new Date().getTime();
+                        
+//                         let targetTrain = null;
+//                         let minDiff = Infinity;
+
+//                         // Calculate "Scheduled Minutes from Now" to match against MBTA "Minutes"
+//                         const scheduledMinutesAway = (scheduledTime - now) / 60000;
+
+//                         for(let pred of predictions) {
+//                             // Difference between "Live Prediction" and "Google Schedule"
+//                             const diff = Math.abs(pred.minutes - scheduledMinutesAway);
+                            
+//                             // If this train is within 15 mins of our schedule, it's likely OUR train
+//                             if (diff < 15 && diff < minDiff) {
+//                                 minDiff = diff;
+//                                 targetTrain = pred;
+//                             }
+//                         }
+
+//                         // If we found our specific train, analyze IT (not the random next one)
+//                         if (targetTrain) {
+//                             const minutesAway = targetTrain.minutes;
+                            
+//                             // LOGIC:
+//                             // If this is a TRANSFER, we need to compare it to when we arrive from previous train
+//                             if (i > 0 && activeRoute.steps[i-1].is_transit) {
+//                                 // Previous step arrival time
+//                                 const prevArrival = activeRoute.steps[i-1].arrival_time * 1000;
+//                                 const msUntilArrival = prevArrival - now;
+//                                 const minutesUntilArrival = msUntilArrival / 60000;
+                                
+//                                 // Buffer = (Train Leaves) - (I Arrive)
+//                                 const buffer = minutesAway - minutesUntilArrival;
+                                
+//                                 if (buffer < 1) {
+//                                     newConfidence = 'low';
+//                                     newUpdate = `⚠️ Missed Connection: Train leaves before you arrive`;
+//                                 } else if (buffer < 4) {
+//                                     newConfidence = 'medium';
+//                                     newUpdate = `🏃 Run! Connection tightens to ${Math.floor(buffer)} min`;
+//                                 } else {
+//                                     newUpdate = `✅ Connection On Time (${Math.floor(buffer)} min buffer)`;
+//                                 }
+//                             } 
+//                             // If this is the FIRST train (Walking there)
+//                             else {
+//                                 // Use the static walk time calculated by backend
+//                                 const walkTimeStr = activeRoute.walk_minutes || "0"; 
+//                                 const walkMinutes = parseInt(walkTimeStr.split(' ')[0]) || 0;
+                                
+//                                 // Buffer = (Train Leaves) - (Walk Time)
+//                                 const buffer = minutesAway - walkMinutes;
+
+//                                 if (buffer < 0) {
+//                                     // It's leaving before we can walk there. 
+//                                     // BUT: Is there another train later?
+//                                     // If we missed our target, we shift to the next available one.
+//                                     newConfidence = 'medium';
+//                                     newUpdate = `⚠️ You missed the ${formatTime(step.departure_time)} train. Next one in ${minutesAway} min.`;
+//                                 } else if (buffer < 3) {
+//                                     newConfidence = 'medium';
+//                                     newUpdate = `🏃 Hurry! Depart in ${minutesAway} min (Walk is ${walkMinutes} min)`;
+//                                 } else {
+//                                     // We are safe
+//                                     // newUpdate = `On Time: Depart in ${minutesAway} min`;
+//                                 }
+//                             }
+//                         } else {
+//                             // If no matching train found, it might be too far in future or cancelled
+//                             // Fallback: Just show the next available
+//                              if (predictions[0].minutes < 2 && i > 0) {
+//                                  // Only warn if it's super close and we might be confused
+//                                  // newUpdate = "Next train is very soon (check schedule)";
+//                              }
+//                         }
+//                     }
+//                 } catch (e) { console.log(e); }
+//             }
+//             if (newConfidence === 'low') break;
+//         }
+        
+//         setLiveConfidence(newConfidence);
+//         setTransferUpdate(newUpdate);
+//     };
+
+//     fetchVehicles();
+//     checkTransferSafety();
+//     const interval = setInterval(() => {
+//         fetchVehicles();
+//         checkTransferSafety();
+//     }, 6000); 
+
+//     return () => clearInterval(interval);
+//   }, [screen, activeRoute]);
+
+//   // --- 3. SEARCH ---
 //   const handleSearch = async () => {
 //     Keyboard.dismiss();
-//     setRouteData(null); // Clear previous
-//     setSelectedStation(null); // Close prediction board if open
-    
 //     if (!origin || !destination) return;
-
 //     setLoading(true);
 //     try {
 //       const res = await fetch(`${API_BASE_URL}/directions`, {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ origin, destination })
+//         body: JSON.stringify({ origin, destination, walking_speed: walkingSpeed })
 //       });
 //       const data = await res.json();
-      
-//       if (data.success && data.data) {
-//         // Handle List of Routes
-//         const routes = Array.isArray(data.data) ? data.data : [data.data];
-//         setAllRoutes(routes);
-//         setSelectedRouteIndex(0); // Default to first route
-
-//         // Zoom to the first route
-//         if (routes.length > 0) {
-//             const coords = routes[0].path.map((c: any) => ({ latitude: c.lat, longitude: c.lng }));
-//             mapRef.current?.fitToCoordinates(coords, {
-//                 edgePadding: { top: 100, right: 40, bottom: 400, left: 40 },
-//                 animated: true,
-//             });
-//         }
-//       } else {
-//         alert("No route found: " + (data.error || "Unknown error"));
-//       }
-//     } catch (err: any) {
-//       alert("Network Error: " + err.message);
-//     }
+//       if (data.success) {
+//           setAllRoutes(data.data);
+//           if (data.data[0]?.path) fitToRoute(data.data[0].path);
+//       } else { alert("No route found"); }
+//     } catch (err) { alert("Error connecting to server"); }
 //     setLoading(false);
 //   };
 
-//   // --- 3. FETCH PREDICTIONS (ON STATION CLICK) ---
-//   const fetchPredictions = async (station: any) => {
-//     setSelectedStation(station);
-//     setPredictions([]); // Clear old data
-//     // Close route view to focus on station
-//     setAllRoutes([]); 
+//   const fitToRoute = (path: any[]) => {
+//     const coords = path.map((c: any) => ({ latitude: c.lat, longitude: c.lng }));
+//     mapRef.current?.fitToCoordinates(coords, { edgePadding: { top: 100, right: 40, bottom: 400, left: 40 } });
+//   }
 
-//     try {
-//         const res = await fetch(`${API_BASE_URL}/mbta/predictions/${station.id}`);
-//         const data = await res.json();
-//         if (data.success) setPredictions(data.data);
-//     } catch (err) {
-//         console.error("Prediction Error", err);
-//     }
+//   // --- 4. NAVIGATION ---
+//   const startLiveNavigation = (route: any) => {
+//       setActiveRoute(route);
+//       setLiveConfidence(route.catch_confidence); 
+//       setScreen('live');
+//       fitToRoute(route.path);
 //   };
 
-//   // Helper to get current route data safely
-//   const currentRoute = allRoutes.length > 0 ? allRoutes[selectedRouteIndex] : null;
+//   const exitLiveNavigation = () => {
+//       setScreen('search');
+//       setActiveRoute(null);
+//       setVehicles([]); 
+//   };
 
-//   // Helper to set route data to null (replacing setRouteData(null))
-//   const setRouteData = (val: any) => {
-//     if (val === null) setAllRoutes([]);
-//   }
+//   const getConfidenceColor = (conf: string) => {
+//       if (conf === 'high') return '#10B981'; 
+//       if (conf === 'medium') return '#F59E0B'; 
+//       return '#EF4444'; 
+//   };
+
+//   // --- TIME FORMATTER ---
+//   const formatTime = (ts: number) => {
+//       if(!ts) return "";
+//       return new Date(ts * 1000).toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'});
+//   };
 
 //   return (
 //     <View style={styles.container}>
+//       <StatusBar barStyle="dark-content" />
       
-//       {/* --- MAP VIEW --- */}
 //       <MapView
 //         ref={mapRef}
 //         style={styles.map}
-//         provider={PROVIDER_GOOGLE}
 //         initialRegion={region}
 //         showsUserLocation={true}
-//         onPress={() => Keyboard.dismiss()}
 //       >
-//         {/* 1. STATION MARKERS (Clickable) */}
-//         {stations.map(station => (
-//           <Marker
-//             key={station.id}
-//             coordinate={{ latitude: station.lat, longitude: station.lng }}
-//             title={station.name}
-//             // Color code pins by line
-//             pinColor={
-//                 station.routes[0].includes('Red') ? '#DA291C' : 
-//                 station.routes[0].includes('Orange') ? '#ED8B00' : 
-//                 station.routes[0].includes('Blue') ? '#003DA5' : '#00843D'
-//             }
-//             onPress={() => fetchPredictions(station)}
-//           />
+//         {screen === 'search' && stations.map(s => (
+//           <Marker key={s.id} coordinate={{ latitude: s.lat, longitude: s.lng }} title={s.name}
+//             pinColor={s.routes[0].includes('Red') ? '#DA291C' : s.routes[0].includes('Orange') ? '#ED8B00' : '#00843D'} />
 //         ))}
-
-//         {/* 2. LIVE TRAIN MARKERS (Moving) */}
-//         {vehicles.map((train) => (
-//             <Marker
-//                 key={train.id}
-//                 coordinate={{ latitude: train.lat, longitude: train.lng }}
-//                 rotation={train.bearing}
-//                 anchor={{ x: 0.5, y: 0.5 }}
-//                 title={`${train.route} Line`}
-//                 zIndex={10} // Put trains above stations
-//             >
-//                 <View style={[styles.trainMarker, {
-//                     backgroundColor: train.route.includes('Red') ? '#DA291C' : 
-//                                    train.route.includes('Orange') ? '#ED8B00' : 
-//                                    train.route.includes('Blue') ? '#003DA5' : '#00843D'
-//                 }]}>
-//                     <Text style={{fontSize: 12}}>🚇</Text>
+//         {screen === 'live' && vehicles.map(v => (
+//             <Marker key={v.id} coordinate={{ latitude: v.lat, longitude: v.lng }} rotation={v.bearing} anchor={{x:0.5, y:0.5}}>
+//                 <View style={[styles.trainMarker, { backgroundColor: v.route.includes('Red') ? '#DA291C' : '#00843D' }]}>
+//                     <TrainFront size={12} color="white"/>
 //                 </View>
 //             </Marker>
 //         ))}
-
-//         {/* 3. ROUTE POLYLINE (Updates on Tab Click) */}
-//         {currentRoute && (
-//           <Polyline
-//             coordinates={currentRoute.path.map((p: any) => ({ latitude: p.lat, longitude: p.lng }))}
-//             strokeColor="#2563EB"
-//             strokeWidth={5}
-//           />
+//         {(screen === 'live' && activeRoute) && (
+//           <Polyline coordinates={activeRoute.path.map((p: any) => ({ latitude: p.lat, longitude: p.lng }))} strokeColor="#2563EB" strokeWidth={5} />
+//         )}
+//         {(screen === 'search' && allRoutes.length > 0) && (
+//              <Polyline coordinates={allRoutes[0].path.map((p: any) => ({ latitude: p.lat, longitude: p.lng }))} strokeColor="#9ca3af" strokeWidth={3} lineDashPattern={[5,5]}/>
 //         )}
 //       </MapView>
 
-//       {/* --- SEARCH BOX --- */}
-//       <SafeAreaView style={styles.searchContainer}>
-//         <View style={styles.card}>
-//           <Text style={styles.title}>Boston Transit</Text>
-//           <View style={styles.inputRow}>
-//             <View style={[styles.dot, { backgroundColor: '#3B82F6' }]} />
-//             <TextInput style={styles.input} placeholder="Start (e.g. Ashmont)" value={origin} onChangeText={setOrigin} />
-//           </View>
-//           <View style={styles.inputRow}>
-//             <View style={[styles.dot, { backgroundColor: '#EF4444' }]} />
-//             <TextInput style={styles.input} placeholder="End (e.g. Harvard)" value={destination} onChangeText={setDestination} />
-//           </View>
-//           <TouchableOpacity style={styles.button} onPress={handleSearch} disabled={loading}>
-//             {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Find Route</Text>}
-//           </TouchableOpacity>
-//         </View>
-//       </SafeAreaView>
-
-      
-//       {/* --- BOTTOM SHEET A: ROUTE RESULTS --- */}
-//       {currentRoute && (
-//         <View style={styles.resultsSheet}>
-            
-//             {/* 1. UPDATED TABS: Show Departure Time & Duration */}
-//             {allRoutes.length > 1 && (
-//                 <View style={styles.routeTabs}>
-//                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-//                         {allRoutes.map((route, idx) => {
-//                             // Extract just the start time (e.g. "2:15 PM") from the range
-//                             const startTime = route.time_range ? route.time_range.split('–')[0].trim() : "Now";
-                            
-//                             return (
-//                                 <TouchableOpacity 
-//                                     key={idx}
-//                                     onPress={() => setSelectedRouteIndex(idx)}
-//                                     style={[styles.tab, selectedRouteIndex === idx && styles.activeTab]}
-//                                 >
-//                                     <View style={{alignItems: 'center'}}>
-//                                         <Text style={[styles.tabText, selectedRouteIndex === idx && styles.activeTabText, {fontWeight: 'bold'}]}>
-//                                             {startTime}
-//                                         </Text>
-//                                         <Text style={[styles.tabText, selectedRouteIndex === idx && styles.activeTabText, {fontSize: 10}]}>
-//                                             {route.duration}
-//                                         </Text>
-//                                     </View>
-//                                 </TouchableOpacity>
-//                             );
-//                         })}
-//                     </ScrollView>
+//       {/* --- SEARCH SCREEN --- */}
+//       {screen === 'search' && (
+//           <SafeAreaView style={styles.overlay}>
+//             <View style={styles.card}>
+//                 <Text style={styles.title}>Boston Transit</Text>
+//                 <TextInput style={styles.input} placeholder="Start" value={origin} onChangeText={setOrigin} />
+//                 <TextInput style={styles.input} placeholder="End" value={destination} onChangeText={setDestination} />
+//                 <View style={styles.speedRow}>
+//                     {['slow', 'normal', 'fast'].map(s => (
+//                         <TouchableOpacity key={s} onPress={() => setWalkingSpeed(s)} 
+//                             style={[styles.speedBtn, walkingSpeed === s && styles.activeSpeed]}>
+//                             <Text style={{textTransform:'capitalize', color: walkingSpeed===s?'white':'black'}}>{s}</Text>
+//                         </TouchableOpacity>
+//                     ))}
 //                 </View>
-//             )}
-
-//             {/* 2. UPDATED HEADER: Show Full Time Range (2:15 PM - 2:45 PM) */}
-//             <View style={styles.resultHeader}>
-//                 <View>
-//                     <View style={{flexDirection: 'row', alignItems: 'baseline'}}>
-//                         <Text style={styles.timeText}>{currentRoute.duration}</Text>
-//                         {currentRoute.time_range && (
-//                             <Text style={{marginLeft: 8, fontSize: 16, fontWeight: '600', color: '#444'}}>
-//                                 {currentRoute.time_range}
-//                             </Text>
-//                         )}
-//                     </View>
-//                     <Text style={styles.distText}>{currentRoute.distance} • {currentRoute.summary}</Text>
-//                 </View>
-//                 <TouchableOpacity onPress={() => setAllRoutes([])}>
-//                     <View style={styles.closeBtn}><X size={20} color="#000" /></View>
+//                 <TouchableOpacity style={styles.mainBtn} onPress={handleSearch} disabled={loading}>
+//                     {loading ? <ActivityIndicator color="#fff"/> : <Text style={styles.btnText}>Find Routes</Text>}
 //                 </TouchableOpacity>
 //             </View>
 
-//             {/* Steps List (Unchanged) */}
-//             <FlatList
-//                 data={currentRoute.steps}
-//                 keyExtractor={(_, i) => i.toString()}
-//                 renderItem={({ item, index }) => (
-//                 <View style={styles.stepItem}>
-//                     <Text style={styles.stepIndex}>{index + 1}.</Text>
-//                     <Text style={styles.stepText}>
-//                         {item.instruction.replace(/<[^>]*>?/gm, '')}
-//                     </Text>
+//             {allRoutes.length > 0 && (
+//                 <View style={styles.routeListContainer}>
+//                     <Text style={styles.listHeader}>Select a Route:</Text>
+//                     <FlatList 
+//                         data={allRoutes}
+//                         keyExtractor={(_,i) => i.toString()}
+//                         renderItem={({item}) => (
+//                             <TouchableOpacity style={styles.routeCard} onPress={() => startLiveNavigation(item)}>
+//                                 <View style={styles.routeRow}>
+//                                     <View style={{flex: 1}}>
+//                                         <Text style={styles.routeTime}>{item.duration}</Text>
+//                                         <Text style={styles.routeSummary}>{item.summary}</Text>
+//                                     </View>
+//                                     <View style={[styles.confBadge, {backgroundColor: getConfidenceColor(item.catch_confidence)}]}>
+//                                         <Text style={styles.confText}>{item.catch_confidence === 'high' ? 'Safe' : item.catch_confidence === 'medium' ? 'Tight' : 'Risky'}</Text>
+//                                     </View>
+//                                 </View>
+//                             </TouchableOpacity>
+//                         )}
+//                     />
 //                 </View>
-//                 )}
-//             />
-//         </View>
+//             )}
+//           </SafeAreaView>
 //       )}
 
-//       {/* --- BOTTOM SHEET B: STATION ARRIVALS (PREDICTIONS) --- */}
-//       {selectedStation && (
-//           <View style={[styles.resultsSheet, { height: 350 }]}>
-//               <View style={styles.resultHeader}>
-//                 <View style={{flexDirection:'row', alignItems:'center'}}>
-//                     <MapPin color="red" size={24} style={{marginRight: 8}}/>
-//                     <Text style={styles.stationTitle}>{selectedStation.name}</Text>
-//                 </View>
-//                 <TouchableOpacity onPress={() => setSelectedStation(null)}>
-//                     <View style={styles.closeBtn}><X size={20} color="#000" /></View>
-//                 </TouchableOpacity>
-//               </View>
+//       {/* --- LIVE NAVIGATION SCREEN (UPDATED) --- */}
+//       {screen === 'live' && activeRoute && (
+//           <View style={styles.liveContainer}>
+//               <SafeAreaView style={styles.liveHeader}>
+//                   <TouchableOpacity onPress={exitLiveNavigation} style={styles.backBtn}>
+//                       <ArrowLeft color="black" size={24}/>
+//                   </TouchableOpacity>
+//                   <View>
+//                       <Text style={styles.liveTitle}>Full Itinerary</Text>
+//                       <Text style={styles.liveSub}>Live Updates Active</Text>
+//                   </View>
+//                   <View style={[styles.confBadge, {marginLeft: 'auto', backgroundColor: getConfidenceColor(liveConfidence)}]}>
+//                       <Text style={styles.confText}>{liveConfidence.toUpperCase()}</Text>
+//                   </View>
+//               </SafeAreaView>
 
-//               <Text style={{color:'#666', marginBottom:10}}>Live Arrivals:</Text>
-              
-//               {predictions.length === 0 ? (
-//                   <ActivityIndicator color="#2563EB" style={{marginTop: 20}}/>
-//               ) : (
-//                 <FlatList 
-//                     data={predictions}
-//                     keyExtractor={(item) => item.id}
-//                     renderItem={({item}) => (
-//                         <View style={styles.predictionRow}>
-//                             <View style={[styles.badge, {
-//                                 backgroundColor: item.route.includes('Red') ? '#DA291C' : 
-//                                                item.route.includes('Orange') ? '#ED8B00' : 
-//                                                item.route.includes('Blue') ? '#003DA5' : '#00843D'
-//                             }]}>
-//                                 <Text style={styles.badgeText}>{item.route}</Text>
-//                             </View>
-//                             <Text style={styles.predDest}>{item.direction}</Text>
-//                             <View style={{alignItems:'flex-end'}}>
-//                                 <Text style={styles.predTime}>{item.minutes} min</Text>
-//                                 <Text style={{fontSize:10, color:'#999'}}>{item.status}</Text>
-//                             </View>
-//                         </View>
-//                     )}
-//                 />
-//               )}
+//               {/* TIMELINE CARD */}
+//               <View style={styles.timelineCard}>
+//                    {/* DYNAMIC HEADER */}
+//                    {transferUpdate !== '' && (
+//                        <View style={[styles.updateBox, {backgroundColor: liveConfidence === 'low' ? '#FFEBEE' : '#E0F2F1'}]}>
+//                            <Text style={[styles.updateText, {color: liveConfidence === 'low' ? '#C62828' : '#00695C'}]}>{transferUpdate}</Text>
+//                        </View>
+//                    )}
+
+//                    <FlatList
+//                       data={activeRoute.steps}
+//                       keyExtractor={(_, i) => i.toString()}
+//                       renderItem={({item, index}) => {
+//                           // Is it a transit step?
+//                           if(item.is_transit) {
+//                               return (
+//                                   <View style={styles.timelineItem}>
+//                                       <View style={styles.timelineLeft}>
+//                                           <Text style={styles.timeLabel}>{formatTime(item.departure_time)}</Text>
+//                                           <View style={styles.lineBar} />
+//                                           <Text style={styles.timeLabel}>{formatTime(item.arrival_time)}</Text>
+//                                       </View>
+//                                       <View style={styles.timelineIconContainer}>
+//                                           <TrainFront size={20} color="#2563EB" />
+//                                       </View>
+//                                       <View style={styles.timelineContent}>
+//                                           <Text style={styles.timelineTitle}>Ride Train</Text>
+//                                           <Text style={styles.timelineDesc}>{item.instruction.replace(/<[^>]*>?/gm, '')}</Text>
+//                                           {/* Buffer Calculation Logic could go here */}
+//                                       </View>
+//                                   </View>
+//                               );
+//                           }
+//                           // Is it walking?
+//                           return (
+//                               <View style={styles.timelineItem}>
+//                                   <View style={styles.timelineLeft}>
+//                                        {/* Only show time if we calculated it manually in backend, otherwise blank */}
+//                                        <Text style={styles.timeLabel}></Text> 
+//                                   </View>
+//                                   <View style={styles.timelineIconContainer}>
+//                                       {index === 0 ? <Navigation size={20} color="#666"/> : <Footprints size={20} color="#666" />}
+//                                   </View>
+//                                   <View style={styles.timelineContent}>
+//                                       <Text style={styles.timelineTitle}>{index === 0 ? "Start" : "Walk / Transfer"}</Text>
+//                                       <Text style={styles.timelineDesc}>{item.instruction.replace(/<[^>]*>?/gm, '')}</Text>
+//                                   </View>
+//                               </View>
+//                           );
+//                       }}
+//                    />
+//               </View>
 //           </View>
 //       )}
 
@@ -595,408 +392,450 @@
 // }
 
 // const styles = StyleSheet.create({
-//   container: { flex: 1 },
-//   map: { width: '100%', height: '100%' },
+//   container: { flex: 1, backgroundColor: '#fff' },
+//   map: { ...StyleSheet.absoluteFillObject },
+//   overlay: { flex: 1, padding: 20, justifyContent: 'space-between' },
+//   card: { backgroundColor: 'white', padding: 16, borderRadius: 16, elevation: 10, shadowColor:'#000', shadowOpacity:0.1 },
+//   title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+//   input: { backgroundColor: '#F3F4F6', padding: 12, borderRadius: 8, marginBottom: 10 },
+//   speedRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+//   speedBtn: { flex: 1, alignItems: 'center', padding: 8, backgroundColor: '#eee', borderRadius: 8, marginHorizontal: 2 },
+//   activeSpeed: { backgroundColor: '#2563EB' },
+//   mainBtn: { backgroundColor: '#2563EB', padding: 14, borderRadius: 10, alignItems: 'center' },
+//   btnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+
+//   routeListContainer: { backgroundColor: 'white', borderRadius: 16, padding: 16, maxHeight: '45%' },
+//   listHeader: { fontWeight: 'bold', marginBottom: 10, color: '#666' },
+//   routeCard: { padding: 12, borderBottomWidth: 1, borderColor: '#eee' },
+//   routeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+//   routeTime: { fontSize: 18, fontWeight: 'bold' },
+//   routeSummary: { fontSize: 12, color: '#666' },
+//   confBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+//   confText: { color: 'white', fontWeight: 'bold', fontSize: 12, textTransform: 'uppercase' },
+
+//   // Live Screen
+//   liveContainer: { flex: 1, justifyContent: 'space-between' },
+//   liveHeader: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingTop: 60, backgroundColor: 'rgba(255,255,255,0.9)' },
+//   backBtn: { padding: 10, marginRight: 10, backgroundColor: '#eee', borderRadius: 20 },
+//   liveTitle: { fontSize: 18, fontWeight: 'bold' },
+//   liveSub: { color: '#666' },
   
-//   // Search
-//   searchContainer: { position: 'absolute', top: 50, width: '100%', paddingHorizontal: 20, zIndex: 10 },
-//   card: { backgroundColor: 'white', borderRadius: 16, padding: 16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
-//   title: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
-//   inputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 10 },
-//   dot: { width: 8, height: 8, borderRadius: 4, marginRight: 10 },
-//   input: { flex: 1, height: 44, fontSize: 16, color: '#000' },
-//   button: { backgroundColor: '#2563EB', borderRadius: 10, height: 48, justifyContent: 'center', alignItems: 'center', marginTop: 5 },
-//   buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+//   timelineCard: { flex: 1, backgroundColor: 'white', marginTop: 20, borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 20, shadowColor: '#000', shadowOpacity: 0.1, elevation: 20 },
+//   updateBox: { padding: 12, borderRadius: 8, marginBottom: 15 },
+//   updateText: { fontWeight: 'bold', textAlign: 'center' },
 
-//   // Markers
-//   trainMarker: { padding: 4, borderRadius: 12, borderWidth: 1.5, borderColor: 'white', elevation: 4 },
-
-//   // Bottom Sheet
-//   resultsSheet: { position: 'absolute', bottom: 0, width: '100%', height: '45%', backgroundColor: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, shadowColor: '#000', elevation: 20 },
-//   resultHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
-//   closeBtn: { padding: 5, backgroundColor: '#f0f0f0', borderRadius: 15 },
+//   // Timeline Item
+//   timelineItem: { flexDirection: 'row', marginBottom: 20 },
+//   timelineLeft: { width: 60, alignItems: 'flex-end', marginRight: 10 },
+//   timeLabel: { fontSize: 12, fontWeight: 'bold', color: '#666' },
+//   lineBar: { width: 2, flex: 1, backgroundColor: '#ddd', marginVertical: 4, alignSelf: 'flex-end', marginRight: 0 },
+//   timelineIconContainer: { alignItems: 'center', marginRight: 10 },
+//   timelineContent: { flex: 1, justifyContent: 'center' },
+//   timelineTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 2 },
+//   timelineDesc: { color: '#555', fontSize: 14 },
   
-//   // Route Info
-//   timeText: { fontSize: 24, fontWeight: 'bold', color: '#2563EB' },
-//   distText: { fontSize: 14, color: '#666', marginTop: 2 },
-  
-//   // Steps
-//   stepItem: { flexDirection: 'row', marginBottom: 12, paddingRight: 10 },
-//   stepIndex: { fontWeight: 'bold', color: '#2563EB', marginRight: 8, width: 25 },
-//   stepText: { flex: 1, color: '#333', lineHeight: 20 },
-
-//   // Multi-Route Tabs
-//   routeTabs: { flexDirection: 'row', marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 10 },
-//   tab: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, backgroundColor: '#f0f0f0', marginRight: 8 },
-//   activeTab: { backgroundColor: '#2563EB' },
-//   tabText: { color: '#666', fontWeight: '600', fontSize: 12 },
-//   activeTabText: { color: 'white' },
-
-//   // Prediction Board
-//   stationTitle: { fontSize: 22, fontWeight: 'bold' },
-//   predictionRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
-//   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginRight: 10, width: 60, alignItems:'center' },
-//   badgeText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-//   predDest: { flex: 1, fontSize: 16, fontWeight: '500' },
-//   predTime: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+//   trainMarker: { padding: 6, borderRadius: 12, borderWidth: 2, borderColor: 'white', elevation: 5 },
 // });
+
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Keyboard, FlatList, ActivityIndicator, SafeAreaView, ScrollView, Dimensions } from 'react-native';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Keyboard, FlatList, ActivityIndicator, SafeAreaView, ScrollView, StatusBar } from 'react-native';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { X, MapPin } from 'lucide-react-native';
+import { Audio } from 'expo-av'; // 👈 AUDIO LIBRARY
+import { ArrowLeft, TrainFront, Footprints, Clock, Navigation } from 'lucide-react-native';
 
 // ⚠️ REPLACE WITH YOUR CURRENT NGROK OR IP URL
 const API_BASE_URL = 'https://e819e1a93149.ngrok-free.app/api'; 
 
-const { width } = Dimensions.get('window');
-
 export default function App() {
   const mapRef = useRef<MapView>(null);
+  const lastSpokenRef = useRef<string>(""); // Prevents repeating audio
   
-  // --- STATE ---
+  // --- APP STATE ---
+  const [screen, setScreen] = useState<'search' | 'live'>('search'); 
+  
+  // --- DATA ---
   const [stations, setStations] = useState<any[]>([]);
-  const [vehicles, setVehicles] = useState<any[]>([]); // 🚇 Live Trains
-  
-  // Search Inputs
+  const [vehicles, setVehicles] = useState<any[]>([]);
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
-  const [walkingSpeed, setWalkingSpeed] = useState('normal'); // 'slow', 'normal', 'fast'
+  const [walkingSpeed, setWalkingSpeed] = useState('normal'); 
   
-  // Route Data (Multiple Routes)
   const [allRoutes, setAllRoutes] = useState<any[]>([]);
-  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
+  const [activeRoute, setActiveRoute] = useState<any>(null); 
   
-  // Station Predictions (Arrivals Board)
-  const [selectedStation, setSelectedStation] = useState<any>(null);
-  const [predictions, setPredictions] = useState<any[]>([]);
+  const [liveConfidence, setLiveConfidence] = useState<string>('high'); 
+  const [transferUpdate, setTransferUpdate] = useState<string>('');
   
   const [loading, setLoading] = useState(false);
   const [userLocation, setUserLocation] = useState<any>(null);
-
-  // Initial Region (Boston)
   const [region, setRegion] = useState({
-    latitude: 42.3601,
-    longitude: -71.0589,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
+    latitude: 42.3601, longitude: -71.0589, latitudeDelta: 0.05, longitudeDelta: 0.05,
   });
 
-  // --- 1. INITIAL FETCH & LIVE VEHICLE POLLING ---
+  // --- 0. ROBUST AUDIO HELPER (ELEVENLABS) ---
+  const speak = async (message: string) => {
+      // Don't repeat the exact same sentence immediately
+      if (message === lastSpokenRef.current) return;
+      lastSpokenRef.current = message;
+      
+      const url = `${API_BASE_URL}/speak?text=${encodeURIComponent(message)}`;
+
+      try {
+          // 1. Try to play the audio directly
+          const { sound } = await Audio.Sound.createAsync(
+              { uri: url },
+              { shouldPlay: true }
+          );
+          await sound.playAsync();
+      } catch (err) { 
+          // 2. IF IT FAILS: Check if Backend sent a JSON error instead of Audio
+          console.log("⚠️ Audio failed to load. Checking for API error...");
+          
+          try {
+             const res = await fetch(url);
+             const contentType = res.headers.get("content-type");
+             
+             if (contentType && contentType.includes("application/json")) {
+                 const errorData = await res.json();
+                 // 🚨 PRINT THE EXACT ERROR FOR DEBUGGING
+                 console.error("❌ ElevenLabs API Error:", errorData.error); 
+             } else {
+                 console.error("❌ Audio Player Error (Network/Format):", err);
+             }
+          } catch (fetchErr) {
+             console.error("❌ Unknown Audio Error:", err);
+          }
+      }
+  };
+
+  // --- 1. INITIAL SETUP ---
   useEffect(() => {
     (async () => {
-      // Permission & Location
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        let location = await Location.getCurrentPositionAsync({});
-        setUserLocation(location.coords);
-      }
-
-      // Fetch Static Stations
       try {
         const res = await fetch(`${API_BASE_URL}/mbta/stations`);
         const data = await res.json();
         if (data.success) setStations(data.data);
-      } catch (err) {
-        console.error("Station Fetch Error:", err);
-      }
-    })();
+      } catch (err) {}
 
-    // 🔄 POLL LIVE TRAINS (Every 5 Seconds)
-    const fetchVehicles = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/mbta/vehicles`);
-        const data = await res.json();
-        if (data.success) setVehicles(data.data);
-      } catch (err) {
-        console.log("Vehicle Sync Error:", err);
-      }
-    };
-
-    fetchVehicles(); // Run once immediately
-    const interval = setInterval(fetchVehicles, 5000); // Loop
-    return () => clearInterval(interval); // Cleanup
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+             let loc = await Location.getCurrentPositionAsync({});
+             setUserLocation(loc.coords);
+        }
+      } catch (e) { setUserLocation({ latitude: 42.355, longitude: -71.065 }); }
+    })();
   }, []);
 
-  // --- 2. HANDLE SEARCH (WITH SPEED FILTER) ---
+  // --- 2. LIVE TRACKING & AUDIO ALERTS ---
+  useEffect(() => {
+    if (screen !== 'live' || !activeRoute) return;
+
+    // A. Vehicle Polling
+    const summary = activeRoute.summary || "";
+    const linesToTrack: string[] = [];
+    if (summary.includes('Red')) linesToTrack.push('Red');
+    if (summary.includes('Orange')) linesToTrack.push('Orange');
+    if (summary.includes('Blue')) linesToTrack.push('Blue');
+    if (summary.includes('Green')) linesToTrack.push('Green-B,Green-C,Green-D,Green-E');
+
+    const fetchVehicles = async () => {
+        if(linesToTrack.length === 0) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/mbta/vehicles?routes=${linesToTrack.join(',')}`);
+            const data = await res.json();
+            if (data.success) setVehicles(data.data);
+        } catch (err) {}
+    };
+
+    // B. TARGETED TRANSFER CHECK + VOICE LOGIC
+    const checkTransferSafety = async () => {
+        let newConfidence = activeRoute.catch_confidence; 
+        let newUpdate = "On Schedule";
+
+        for (let i = 0; i < activeRoute.steps.length; i++) {
+            const step = activeRoute.steps[i];
+            
+            if (step.is_transit && step.stop_id) {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/mbta/predictions/${step.stop_id}`);
+                    const data = await res.json();
+                    
+                    if (data.success && data.data.length > 0) {
+                        const predictions = data.data;
+                        const scheduledTime = step.departure_time * 1000; 
+                        const now = new Date().getTime();
+                        
+                        let targetTrain = null;
+                        let minDiff = Infinity;
+                        const scheduledMinutesAway = (scheduledTime - now) / 60000;
+
+                        // Match Scheduled vs Live
+                        for(let pred of predictions) {
+                            const diff = Math.abs(pred.minutes - scheduledMinutesAway);
+                            if (diff < 15 && diff < minDiff) {
+                                minDiff = diff;
+                                targetTrain = pred;
+                            }
+                        }
+
+                        if (targetTrain) {
+                            const minutesAway = targetTrain.minutes;
+                            
+                            // IS THIS A TRANSFER?
+                            if (i > 0 && activeRoute.steps[i-1].is_transit) {
+                                const prevArrival = activeRoute.steps[i-1].arrival_time * 1000;
+                                const msUntilArrival = prevArrival - now;
+                                const minutesUntilArrival = msUntilArrival / 60000;
+                                
+                                const buffer = minutesAway - minutesUntilArrival;
+                                
+                                if (buffer < 1) {
+                                    newConfidence = 'low';
+                                    newUpdate = `⚠️ Missed Connection`;
+                                    // 🗣️ VOICE ALERT
+                                    speak("Attention. You have missed your connection. Please check for alternative routes.");
+                                } else if (buffer < 4) {
+                                    newConfidence = 'medium';
+                                    newUpdate = `🏃 Run! Buffer: ${Math.floor(buffer)} min`;
+                                    // 🗣️ VOICE ALERT
+                                    speak(`Hurry! Your connecting train leaves in ${Math.floor(buffer)} minutes. Please walk faster.`);
+                                } else {
+                                    newUpdate = `✅ Safe Transfer: ${Math.floor(buffer)} min buffer`;
+                                }
+                            } 
+                            // IS THIS THE FIRST TRAIN? (Walking)
+                            else {
+                                const walkTimeStr = activeRoute.walk_minutes || "0"; 
+                                const walkMinutes = parseInt(walkTimeStr.split(' ')[0]) || 0;
+                                const buffer = minutesAway - walkMinutes;
+
+                                if (buffer < 0) {
+                                    newConfidence = 'medium';
+                                    newUpdate = `⚠️ Missed target. Next in ${minutesAway} min.`;
+                                    // 🗣️ VOICE ALERT
+                                    speak(`You missed your scheduled train. The next one arrives in ${minutesAway} minutes.`);
+                                } else if (buffer < 3) {
+                                    newConfidence = 'medium';
+                                    newUpdate = `🏃 Hurry! Depart in ${minutesAway} min`;
+                                    // 🗣️ VOICE ALERT
+                                    speak(`Hurry up. Your train leaves in ${minutesAway} minutes.`);
+                                }
+                            }
+                        }
+                    }
+                } catch (e) { console.log(e); }
+            }
+            if (newConfidence === 'low') break;
+        }
+        
+        setLiveConfidence(newConfidence);
+        setTransferUpdate(newUpdate);
+    };
+
+    fetchVehicles();
+    checkTransferSafety();
+    const interval = setInterval(() => {
+        fetchVehicles();
+        checkTransferSafety();
+    }, 6000); 
+
+    return () => clearInterval(interval);
+  }, [screen, activeRoute]);
+
+
+  // --- 3. SEARCH ---
   const handleSearch = async () => {
     Keyboard.dismiss();
-    setRouteData(null); // Clear previous
-    setSelectedStation(null); // Close prediction board
-    
     if (!origin || !destination) return;
-
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/directions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            origin, 
-            destination,
-            walking_speed: walkingSpeed // 👈 SEND SPEED PREFERENCE
-        })
+        body: JSON.stringify({ origin, destination, walking_speed: walkingSpeed })
       });
       const data = await res.json();
-      
-      if (data.success && data.data) {
-        const routes = Array.isArray(data.data) ? data.data : [data.data];
-        setAllRoutes(routes);
-        setSelectedRouteIndex(0);
-
-        // Zoom to route
-        if (routes.length > 0) {
-            const coords = routes[0].path.map((c: any) => ({ latitude: c.lat, longitude: c.lng }));
-            mapRef.current?.fitToCoordinates(coords, {
-                edgePadding: { top: 100, right: 40, bottom: 400, left: 40 },
-                animated: true,
-            });
-        }
-      } else {
-        alert("No route found: " + (data.error || "Unknown error"));
-      }
-    } catch (err: any) {
-      alert("Network Error: " + err.message);
-    }
+      if (data.success) {
+          setAllRoutes(data.data);
+          if (data.data[0]?.path) fitToRoute(data.data[0].path);
+      } else { alert("No route found"); }
+    } catch (err) { alert("Error connecting to server"); }
     setLoading(false);
   };
 
-  // --- 3. FETCH PREDICTIONS (ON STATION CLICK) ---
-  const fetchPredictions = async (station: any) => {
-    setSelectedStation(station);
-    setPredictions([]); 
-    setAllRoutes([]); 
+  const fitToRoute = (path: any[]) => {
+    const coords = path.map((c: any) => ({ latitude: c.lat, longitude: c.lng }));
+    mapRef.current?.fitToCoordinates(coords, { edgePadding: { top: 100, right: 40, bottom: 400, left: 40 } });
+  }
 
-    try {
-        const res = await fetch(`${API_BASE_URL}/mbta/predictions/${station.id}`);
-        const data = await res.json();
-        if (data.success) setPredictions(data.data);
-    } catch (err) {
-        console.error("Prediction Error", err);
-    }
+  // --- 4. NAVIGATION ---
+  const startLiveNavigation = (route: any) => {
+      setActiveRoute(route);
+      setLiveConfidence(route.catch_confidence); 
+      setScreen('live');
+      fitToRoute(route.path);
+      
+      // 🗣️ INITIAL VOICE GREETING
+      speak(`Starting navigation to ${destination}. Your route is ${route.catch_confidence === 'high' ? 'safe' : 'tight'}.`);
   };
 
-  const currentRoute = allRoutes.length > 0 ? allRoutes[selectedRouteIndex] : null;
+  const exitLiveNavigation = () => {
+      setScreen('search');
+      setActiveRoute(null);
+      setVehicles([]); 
+      lastSpokenRef.current = ""; // Reset voice memory
+  };
 
-  const setRouteData = (val: any) => {
-    if (val === null) setAllRoutes([]);
-  }
+  const getConfidenceColor = (conf: string) => {
+      if (conf === 'high') return '#10B981'; 
+      if (conf === 'medium') return '#F59E0B'; 
+      return '#EF4444'; 
+  };
+
+  const formatTime = (ts: number) => {
+      if(!ts) return "";
+      return new Date(ts * 1000).toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'});
+  };
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       
-      {/* --- MAP VIEW --- */}
       <MapView
         ref={mapRef}
         style={styles.map}
-        provider={PROVIDER_GOOGLE}
         initialRegion={region}
         showsUserLocation={true}
-        onPress={() => Keyboard.dismiss()}
       >
-        {/* STATION MARKERS */}
-        {stations.map(station => (
-          <Marker
-            key={station.id}
-            coordinate={{ latitude: station.lat, longitude: station.lng }}
-            title={station.name}
-            pinColor={
-                station.routes[0].includes('Red') ? '#DA291C' : 
-                station.routes[0].includes('Orange') ? '#ED8B00' : 
-                station.routes[0].includes('Blue') ? '#003DA5' : '#00843D'
-            }
-            onPress={() => fetchPredictions(station)}
-          />
+        {screen === 'search' && stations.map(s => (
+          <Marker key={s.id} coordinate={{ latitude: s.lat, longitude: s.lng }} title={s.name}
+            pinColor={s.routes[0].includes('Red') ? '#DA291C' : s.routes[0].includes('Orange') ? '#ED8B00' : '#00843D'} />
         ))}
-
-        {/* LIVE TRAIN MARKERS */}
-        {vehicles.map((train) => (
-            <Marker
-                key={train.id}
-                coordinate={{ latitude: train.lat, longitude: train.lng }}
-                rotation={train.bearing}
-                anchor={{ x: 0.5, y: 0.5 }}
-                title={`${train.route} Line`}
-                zIndex={10} 
-            >
-                <View style={[styles.trainMarker, {
-                    backgroundColor: train.route.includes('Red') ? '#DA291C' : 
-                                   train.route.includes('Orange') ? '#ED8B00' : 
-                                   train.route.includes('Blue') ? '#003DA5' : '#00843D'
-                }]}>
-                    <Text style={{fontSize: 12}}>🚇</Text>
+        {screen === 'live' && vehicles.map(v => (
+            <Marker key={v.id} coordinate={{ latitude: v.lat, longitude: v.lng }} rotation={v.bearing} anchor={{x:0.5, y:0.5}}>
+                <View style={[styles.trainMarker, { backgroundColor: v.route.includes('Red') ? '#DA291C' : '#00843D' }]}>
+                    <TrainFront size={12} color="white"/>
                 </View>
             </Marker>
         ))}
-
-        {/* ROUTE POLYLINE */}
-        {currentRoute && (
-          <Polyline
-            coordinates={currentRoute.path.map((p: any) => ({ latitude: p.lat, longitude: p.lng }))}
-            strokeColor="#2563EB"
-            strokeWidth={5}
-          />
+        {(screen === 'live' && activeRoute) && (
+          <Polyline coordinates={activeRoute.path.map((p: any) => ({ latitude: p.lat, longitude: p.lng }))} strokeColor="#2563EB" strokeWidth={5} />
+        )}
+        {(screen === 'search' && allRoutes.length > 0) && (
+             <Polyline coordinates={allRoutes[0].path.map((p: any) => ({ latitude: p.lat, longitude: p.lng }))} strokeColor="#9ca3af" strokeWidth={3} lineDashPattern={[5,5]}/>
         )}
       </MapView>
 
-      {/* --- SEARCH BOX --- */}
-      <SafeAreaView style={styles.searchContainer}>
-        <View style={styles.card}>
-          <Text style={styles.title}>Boston Transit</Text>
-          <View style={styles.inputRow}>
-            <View style={[styles.dot, { backgroundColor: '#3B82F6' }]} />
-            <TextInput style={styles.input} placeholder="Start (e.g. Ashmont)" value={origin} onChangeText={setOrigin} />
-          </View>
-          <View style={styles.inputRow}>
-            <View style={[styles.dot, { backgroundColor: '#EF4444' }]} />
-            <TextInput style={styles.input} placeholder="End (e.g. Harvard)" value={destination} onChangeText={setDestination} />
-          </View>
-
-          {/* WALKING SPEED TOGGLE */}
-          <View style={{flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15}}>
-            {['slow', 'normal', 'fast'].map((speed) => (
-                <TouchableOpacity 
-                    key={speed}
-                    onPress={() => setWalkingSpeed(speed)}
-                    style={{
-                        flex: 1,
-                        paddingVertical: 8,
-                        marginHorizontal: 4,
-                        backgroundColor: walkingSpeed === speed ? '#2563EB' : '#F3F4F6',
-                        borderRadius: 8,
-                        alignItems: 'center'
-                    }}
-                >
-                    <Text style={{
-                        color: walkingSpeed === speed ? 'white' : 'black',
-                        fontWeight: '600',
-                        textTransform: 'capitalize'
-                    }}>
-                        {speed === 'slow' ? '🐢 Slow' : speed === 'fast' ? '🐇 Fast' : '🚶 Normal'}
-                    </Text>
-                </TouchableOpacity>
-            ))}
-          </View>
-
-          <TouchableOpacity style={styles.button} onPress={handleSearch} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Find Route</Text>}
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-
-      
-      {/* --- BOTTOM SHEET A: ROUTE RESULTS --- */}
-      {currentRoute && (
-        <View style={styles.resultsSheet}>
-            
-            {/* 1. TABS: Show Arrival Time (The Goal) */}
-            {allRoutes.length > 1 && (
-                <View style={styles.routeTabs}>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        {allRoutes.map((route, idx) => {
-                            // Extract End Time from range "5:00 PM – 5:30 PM"
-                            const arrivalTime = route.time_range.split('–')[1]?.trim() || "End";
-                            
-                            return (
-                                <TouchableOpacity 
-                                    key={idx}
-                                    onPress={() => setSelectedRouteIndex(idx)}
-                                    style={[styles.tab, selectedRouteIndex === idx && styles.activeTab]}
-                                >
-                                    <View style={{alignItems: 'center'}}>
-                                        <Text style={[styles.tabText, selectedRouteIndex === idx && styles.activeTabText, {fontWeight: 'bold'}]}>
-                                            Arrive {arrivalTime}
-                                        </Text>
-                                        <Text style={[styles.tabText, selectedRouteIndex === idx && styles.activeTabText, {fontSize: 10}]}>
-                                            {route.duration}
-                                        </Text>
-                                    </View>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </ScrollView>
+      {/* --- SEARCH SCREEN --- */}
+      {screen === 'search' && (
+          <SafeAreaView style={styles.overlay}>
+            <View style={styles.card}>
+                <Text style={styles.title}>Boston Transit</Text>
+                <TextInput style={styles.input} placeholder="Start" value={origin} onChangeText={setOrigin} />
+                <TextInput style={styles.input} placeholder="End" value={destination} onChangeText={setDestination} />
+                <View style={styles.speedRow}>
+                    {['slow', 'normal', 'fast'].map(s => (
+                        <TouchableOpacity key={s} onPress={() => setWalkingSpeed(s)} 
+                            style={[styles.speedBtn, walkingSpeed === s && styles.activeSpeed]}>
+                            <Text style={{textTransform:'capitalize', color: walkingSpeed===s?'white':'black'}}>{s}</Text>
+                        </TouchableOpacity>
+                    ))}
                 </View>
-            )}
-
-            {/* 2. HEADER: Show Station ETA & Time Range */}
-            <View style={styles.resultHeader}>
-                <View>
-                    <View style={{flexDirection: 'row', alignItems: 'baseline'}}>
-                        <Text style={styles.timeText}>{currentRoute.duration}</Text>
-                        {currentRoute.time_range && (
-                            <Text style={{marginLeft: 8, fontSize: 16, fontWeight: '600', color: '#444'}}>
-                                ({currentRoute.time_range})
-                            </Text>
-                        )}
-                    </View>
-                    
-                    {/* ⚠️ STATION ETA WARNING */}
-                    <Text style={{color: '#d32f2f', fontWeight: 'bold', marginTop: 4, fontSize: 14}}>
-                        {currentRoute.station_eta}
-                    </Text>
-
-                    <Text style={styles.distText}>{currentRoute.distance} • {currentRoute.summary}</Text>
-                </View>
-                <TouchableOpacity onPress={() => setAllRoutes([])}>
-                    <View style={styles.closeBtn}><X size={20} color="#000" /></View>
+                <TouchableOpacity style={styles.mainBtn} onPress={handleSearch} disabled={loading}>
+                    {loading ? <ActivityIndicator color="#fff"/> : <Text style={styles.btnText}>Find Routes</Text>}
                 </TouchableOpacity>
             </View>
 
-            {/* Steps List */}
-            <FlatList
-                data={currentRoute.steps}
-                keyExtractor={(_, i) => i.toString()}
-                renderItem={({ item, index }) => (
-                <View style={styles.stepItem}>
-                    <Text style={styles.stepIndex}>{index + 1}.</Text>
-                    <Text style={styles.stepText}>
-                        {item.instruction.replace(/<[^>]*>?/gm, '')}
-                    </Text>
+            {allRoutes.length > 0 && (
+                <View style={styles.routeListContainer}>
+                    <Text style={styles.listHeader}>Select a Route:</Text>
+                    <FlatList 
+                        data={allRoutes}
+                        keyExtractor={(_,i) => i.toString()}
+                        renderItem={({item}) => (
+                            <TouchableOpacity style={styles.routeCard} onPress={() => startLiveNavigation(item)}>
+                                <View style={styles.routeRow}>
+                                    <View style={{flex: 1}}>
+                                        <Text style={styles.routeTime}>{item.duration}</Text>
+                                        <Text style={styles.routeSummary}>{item.summary}</Text>
+                                    </View>
+                                    <View style={[styles.confBadge, {backgroundColor: getConfidenceColor(item.catch_confidence)}]}>
+                                        <Text style={styles.confText}>{item.catch_confidence === 'high' ? 'Safe' : item.catch_confidence === 'medium' ? 'Tight' : 'Risky'}</Text>
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        )}
+                    />
                 </View>
-                )}
-            />
-        </View>
+            )}
+          </SafeAreaView>
       )}
 
-      {/* --- BOTTOM SHEET B: STATION ARRIVALS (PREDICTIONS) --- */}
-      {selectedStation && (
-          <View style={[styles.resultsSheet, { height: 350 }]}>
-              <View style={styles.resultHeader}>
-                <View style={{flexDirection:'row', alignItems:'center'}}>
-                    <MapPin color="red" size={24} style={{marginRight: 8}}/>
-                    <Text style={styles.stationTitle}>{selectedStation.name}</Text>
-                </View>
-                <TouchableOpacity onPress={() => setSelectedStation(null)}>
-                    <View style={styles.closeBtn}><X size={20} color="#000" /></View>
-                </TouchableOpacity>
-              </View>
+      {/* --- LIVE NAVIGATION SCREEN --- */}
+      {screen === 'live' && activeRoute && (
+          <View style={styles.liveContainer}>
+              <SafeAreaView style={styles.liveHeader}>
+                  <TouchableOpacity onPress={exitLiveNavigation} style={styles.backBtn}>
+                      <ArrowLeft color="black" size={24}/>
+                  </TouchableOpacity>
+                  <View>
+                      <Text style={styles.liveTitle}>Live Itinerary</Text>
+                      <Text style={styles.liveSub}>Voice Alerts On</Text>
+                  </View>
+                  <View style={[styles.confBadge, {marginLeft: 'auto', backgroundColor: getConfidenceColor(liveConfidence)}]}>
+                      <Text style={styles.confText}>{liveConfidence.toUpperCase()}</Text>
+                  </View>
+              </SafeAreaView>
 
-              <Text style={{color:'#666', marginBottom:10}}>Live Arrivals:</Text>
-              
-              {predictions.length === 0 ? (
-                  <ActivityIndicator color="#2563EB" style={{marginTop: 20}}/>
-              ) : (
-                <FlatList 
-                    data={predictions}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({item}) => (
-                        <View style={styles.predictionRow}>
-                            <View style={[styles.badge, {
-                                backgroundColor: item.route.includes('Red') ? '#DA291C' : 
-                                               item.route.includes('Orange') ? '#ED8B00' : 
-                                               item.route.includes('Blue') ? '#003DA5' : '#00843D'
-                            }]}>
-                                <Text style={styles.badgeText}>{item.route}</Text>
-                            </View>
-                            <Text style={styles.predDest}>{item.direction}</Text>
-                            <View style={{alignItems:'flex-end'}}>
-                                <Text style={styles.predTime}>{item.minutes} min</Text>
-                                <Text style={{fontSize:10, color:'#999'}}>{item.status}</Text>
-                            </View>
-                        </View>
-                    )}
-                />
-              )}
+              <View style={styles.timelineCard}>
+                   {/* DYNAMIC HEADER */}
+                   {transferUpdate !== '' && (
+                       <View style={[styles.updateBox, {backgroundColor: liveConfidence === 'low' ? '#FFEBEE' : '#E0F2F1'}]}>
+                           <Text style={[styles.updateText, {color: liveConfidence === 'low' ? '#C62828' : '#00695C'}]}>{transferUpdate}</Text>
+                       </View>
+                   )}
+
+                   <FlatList
+                      data={activeRoute.steps}
+                      keyExtractor={(_, i) => i.toString()}
+                      renderItem={({item, index}) => {
+                          if(item.is_transit) {
+                              return (
+                                  <View style={styles.timelineItem}>
+                                      <View style={styles.timelineLeft}>
+                                          <Text style={styles.timeLabel}>{formatTime(item.departure_time)}</Text>
+                                          <View style={styles.lineBar} />
+                                          <Text style={styles.timeLabel}>{formatTime(item.arrival_time)}</Text>
+                                      </View>
+                                      <View style={styles.timelineIconContainer}>
+                                          <TrainFront size={20} color="#2563EB" />
+                                      </View>
+                                      <View style={styles.timelineContent}>
+                                          <Text style={styles.timelineTitle}>Ride Train</Text>
+                                          <Text style={styles.timelineDesc}>{item.instruction.replace(/<[^>]*>?/gm, '')}</Text>
+                                      </View>
+                                  </View>
+                              );
+                          }
+                          return (
+                              <View style={styles.timelineItem}>
+                                  <View style={styles.timelineLeft}>
+                                       <Text style={styles.timeLabel}></Text> 
+                                  </View>
+                                  <View style={styles.timelineIconContainer}>
+                                      {index === 0 ? <Navigation size={20} color="#666"/> : <Footprints size={20} color="#666" />}
+                                  </View>
+                                  <View style={styles.timelineContent}>
+                                      <Text style={styles.timelineTitle}>{index === 0 ? "Start" : "Walk / Transfer"}</Text>
+                                      <Text style={styles.timelineDesc}>{item.instruction.replace(/<[^>]*>?/gm, '')}</Text>
+                                  </View>
+                              </View>
+                          );
+                      }}
+                   />
+              </View>
           </View>
       )}
 
@@ -1005,48 +844,45 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  map: { width: '100%', height: '100%' },
+  container: { flex: 1, backgroundColor: '#fff' },
+  map: { ...StyleSheet.absoluteFillObject },
+  overlay: { flex: 1, padding: 20, justifyContent: 'space-between' },
+  card: { backgroundColor: 'white', padding: 16, borderRadius: 16, elevation: 10, shadowColor:'#000', shadowOpacity:0.1 },
+  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  input: { backgroundColor: '#F3F4F6', padding: 12, borderRadius: 8, marginBottom: 10 },
+  speedRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  speedBtn: { flex: 1, alignItems: 'center', padding: 8, backgroundColor: '#eee', borderRadius: 8, marginHorizontal: 2 },
+  activeSpeed: { backgroundColor: '#2563EB' },
+  mainBtn: { backgroundColor: '#2563EB', padding: 14, borderRadius: 10, alignItems: 'center' },
+  btnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+
+  routeListContainer: { backgroundColor: 'white', borderRadius: 16, padding: 16, maxHeight: '45%' },
+  listHeader: { fontWeight: 'bold', marginBottom: 10, color: '#666' },
+  routeCard: { padding: 12, borderBottomWidth: 1, borderColor: '#eee' },
+  routeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  routeTime: { fontSize: 18, fontWeight: 'bold' },
+  routeSummary: { fontSize: 12, color: '#666' },
+  confBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  confText: { color: 'white', fontWeight: 'bold', fontSize: 12, textTransform: 'uppercase' },
+
+  liveContainer: { flex: 1, justifyContent: 'space-between' },
+  liveHeader: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingTop: 60, backgroundColor: 'rgba(255,255,255,0.9)' },
+  backBtn: { padding: 10, marginRight: 10, backgroundColor: '#eee', borderRadius: 20 },
+  liveTitle: { fontSize: 18, fontWeight: 'bold' },
+  liveSub: { color: '#666' },
   
-  // Search
-  searchContainer: { position: 'absolute', top: 50, width: '100%', paddingHorizontal: 20, zIndex: 10 },
-  card: { backgroundColor: 'white', borderRadius: 16, padding: 16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
-  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 10 },
-  dot: { width: 8, height: 8, borderRadius: 4, marginRight: 10 },
-  input: { flex: 1, height: 44, fontSize: 16, color: '#000' },
-  button: { backgroundColor: '#2563EB', borderRadius: 10, height: 48, justifyContent: 'center', alignItems: 'center', marginTop: 5 },
-  buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+  timelineCard: { flex: 1, backgroundColor: 'white', marginTop: 20, borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 20, shadowColor: '#000', shadowOpacity: 0.1, elevation: 20 },
+  updateBox: { padding: 12, borderRadius: 8, marginBottom: 15 },
+  updateText: { fontWeight: 'bold', textAlign: 'center' },
 
-  // Markers
-  trainMarker: { padding: 4, borderRadius: 12, borderWidth: 1.5, borderColor: 'white', elevation: 4 },
-
-  // Bottom Sheet
-  resultsSheet: { position: 'absolute', bottom: 0, width: '100%', height: '45%', backgroundColor: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, shadowColor: '#000', elevation: 20 },
-  resultHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  closeBtn: { padding: 5, backgroundColor: '#f0f0f0', borderRadius: 15 },
+  timelineItem: { flexDirection: 'row', marginBottom: 20 },
+  timelineLeft: { width: 60, alignItems: 'flex-end', marginRight: 10 },
+  timeLabel: { fontSize: 12, fontWeight: 'bold', color: '#666' },
+  lineBar: { width: 2, flex: 1, backgroundColor: '#ddd', marginVertical: 4, alignSelf: 'flex-end', marginRight: 0 },
+  timelineIconContainer: { alignItems: 'center', marginRight: 10 },
+  timelineContent: { flex: 1, justifyContent: 'center' },
+  timelineTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 2 },
+  timelineDesc: { color: '#555', fontSize: 14 },
   
-  // Route Info
-  timeText: { fontSize: 24, fontWeight: 'bold', color: '#2563EB' },
-  distText: { fontSize: 14, color: '#666', marginTop: 2 },
-  
-  // Steps
-  stepItem: { flexDirection: 'row', marginBottom: 12, paddingRight: 10 },
-  stepIndex: { fontWeight: 'bold', color: '#2563EB', marginRight: 8, width: 25 },
-  stepText: { flex: 1, color: '#333', lineHeight: 20 },
-
-  // Multi-Route Tabs
-  routeTabs: { flexDirection: 'row', marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 10 },
-  tab: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, backgroundColor: '#f0f0f0', marginRight: 8 },
-  activeTab: { backgroundColor: '#2563EB' },
-  tabText: { color: '#666', fontWeight: '600', fontSize: 12 },
-  activeTabText: { color: 'white' },
-
-  // Prediction Board
-  stationTitle: { fontSize: 22, fontWeight: 'bold' },
-  predictionRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
-  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginRight: 10, width: 60, alignItems:'center' },
-  badgeText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-  predDest: { flex: 1, fontSize: 16, fontWeight: '500' },
-  predTime: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  trainMarker: { padding: 6, borderRadius: 12, borderWidth: 2, borderColor: 'white', elevation: 5 },
 });
